@@ -95,9 +95,17 @@ class Blockchain {
      */
     requestMessageOwnershipVerification(address) {
         return new Promise((resolve) => {
+           
 
-            let message = `${address}:${new Date().getTime().toString().slice(0,-3)}:starRegistry`;
-            resolve(message);
+            try{
+
+                let message = `${address}:${new Date().getTime().toString().slice(0,-3)}:starRegistry`;
+                resolve(message);
+            }
+            catch(error) {
+                console.log(error);
+                reject(error);
+            }
             
         });
     }
@@ -122,19 +130,28 @@ class Blockchain {
     submitStar(address, message, signature, star) {
         let self = this;
         return new Promise(async (resolve, reject) => {
-            msg_time = parseInt(message.split(':')[1]);
-            currentTime = parseInt(new Date().getTime().toString().slice(0, -3));
-            n_minutes = (currentTime - msg_time) / 60;
 
-            if (n_minutes < 5) {
-                bitcoinMessage.verify(message, address, signature);
-                block_data = {"star": star, "owner": address};
-                block = new BlockClass.Block({data: block_data});
-                await self._addBlock(block);
-                resolve(self.chain[self.chain.length - 1]);
+            
+            try {
+
+                let msg_time = parseInt(message.split(':')[1]);
+                let currentTime = parseInt(new Date().getTime().toString().slice(0, -3));
+                let n_minutes = (currentTime - msg_time) / 60;
+
+                if (n_minutes < 5) {
+                    bitcoinMessage.verify(message, address, signature);
+                    let block_data = {"star": star, "owner": address};
+                    let block = new BlockClass.Block(block_data);
+                    await self._addBlock(block);
+                    resolve(self.chain[self.chain.length - 1]);
+                }
+                else {
+                    reject("Not verified! More than 5 minutes elapsed...");
+                }
             }
-            else {
-                reject("Not verified! More than 5 minutes elapsed...");
+            catch(error) {
+                console.log(error.message);
+                reject(error);
             }
             
         });
@@ -150,7 +167,7 @@ class Blockchain {
         let self = this;
         return new Promise((resolve, reject) => {
 
-            filtered_block = self.chain.filter(block => block.hash == hash);
+            let filtered_block = self.chain.filter(block => block.hash == hash);
 
             if (filtered_block.length > 0) {
                 resolve(filtered_block[0]);
@@ -190,24 +207,26 @@ class Blockchain {
         let self = this;
         let stars = [];
         return new Promise((resolve, reject) => {
+            try {
 
-            for (let i=1; i<self.chain.length; i++) {
-                block_data = self.chain[i].getBData();
-                owner_data = block_data.owner;
-                if (owner_data == addres) {
-                    star_data = block_data.star;
-                    stars.push(star_data)
+                for (let i=1; i<self.chain.length; i++) {
+                    let block_data = self.chain[i].getBData();
+                    if (block_data.owner == address) stars.push(block_data);
                 }
                 
 
-            }
+                if (stars.length > 0) {
+                    resolve(stars);
 
-            if (stars.length > 0) {
-                resolve(stars);
-
+                }
+                else {
+                    console.log("Address not found...");
+                    reject(`No stars found with address ${address}!`);
+                }
             }
-            else {
-                reject(`No stars found with address ${address}!`);
+            catch(error) {
+                console.log(error.message);
+                reject(message);
             }
             
         });
@@ -226,8 +245,8 @@ class Blockchain {
 
             for (let i=0; i<self.chain.length; i++) {
                 let error_msg = "";
-                block = self.chain[i];
-                is_valid = block.validate();
+                let block = self.chain[i];
+                let is_valid = block.validate();
                 if (is_valid == False) {
                     error_msg += "Block hash not valid!";
                 }

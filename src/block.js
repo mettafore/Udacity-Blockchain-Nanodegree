@@ -77,7 +77,7 @@ class Block {
 
         let self = this;
 
-        return new Promise((resolve, reject) => {
+        try {
 
             // Getting the encoded data saved in the Block
             let encoded_data = self.body;
@@ -87,13 +87,17 @@ class Block {
             let decoded_object = JSON.parse(decoded_data);
             // Resolve with the data if the object isn't the Genesis block
             if (self.height > 0) {
-                resolve(decoded_object);
+                return decoded_object;
             }
             else {
-                reject("Error!");
+                return "Error!";
             }
-
-        })
+        }
+        catch(error) {
+            console.log(error);
+            return error
+        }
+    
 
     }
 

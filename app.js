@@ -21,7 +21,6 @@ class ApplicationServer {
 		this.app = express();
 		//Blockchain class object
 		this.blockchain = new BlockChain.Blockchain();
-		console.log(this.blockchain);
 		//Method that initialized the express framework.
 		this.initExpress();
 		//Method that initialized middleware modules
