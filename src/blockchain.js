@@ -70,13 +70,15 @@ class Blockchain {
 
                 block.height = self.chain.length;
                 block.time = new Date().getTime().toString().slice(0, -3);
-                block.hash = SHA256(JSON.stringify(block)).toString();
+                
 
                 if (self.chain.length > 0) {
                     block.previousBlockHash = self.chain[self.chain.length - 1].hash;
                     // tamper test
                     // block.hash = '2345';
                 }
+
+                block.hash = SHA256(JSON.stringify(block)).toString();
 
                 
                 let errorLog = await self.validateChain();
