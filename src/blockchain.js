@@ -37,6 +37,8 @@ class Blockchain {
         if( this.height === -1){
             let block = new BlockClass.Block({data: 'Genesis Block'});
             await this._addBlock(block);
+            let elog = await this.validateChain();
+            console.log(elog);
         }
     }
 
@@ -68,15 +70,29 @@ class Blockchain {
 
                 block.height = self.chain.length;
                 block.time = new Date().getTime().toString().slice(0, -3);
+                block.hash = SHA256(JSON.stringify(block)).toString();
 
                 if (self.chain.length > 0) {
                     block.previousBlockHash = self.chain[self.chain.length - 1].hash;
+                    // tamper test
+                    // block.hash = '2345';
                 }
 
-                block.hash = SHA256(JSON.stringify(block)).toString();
-                self.chain.push(block);
-                self.height = block.height;
-                resolve(block);
+                
+                let errorLog = await self.validateChain();
+                console.log(errorLog);
+
+                if (errorLog.length == 0) {
+                    self.chain.push(block);
+                    self.height = block.height;
+                    resolve(block);
+
+                }
+                else {
+                    console.log(errorLog);
+                    resolve("Blockchain is invalid!");
+                }
+                
             }
             catch(error) {
                 reject(error);
@@ -246,16 +262,16 @@ class Blockchain {
             for (let i=0; i<self.chain.length; i++) {
                 let error_msg = "";
                 let block = self.chain[i];
-                let is_valid = block.validate();
-                if (is_valid == False) {
-                    error_msg += "Block hash not valid!";
+                let is_valid = await block.validate();
+                if (is_valid == false) {
+                    error_msg += "Block no. " + i + ": Block hash not valid! ";
                 }
                 if(i>0) {
                     if (block.previousBlockHash != self.chain[i - 1].hash) {
-                        error_msg += "Chain is broken with previous block!";
+                        error_msg += "Block no. " + i + ": Chain is broken with previous block!";
                     }
                 }
-                errorLog.push(error_msg);
+                if (error_msg != "") errorLog.push(error_msg);
 
             }
             resolve(errorLog);
